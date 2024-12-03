@@ -21,8 +21,19 @@ export enum EEasyDebugLogLevel {
  * Takes inspiration from LogCat in AndroidStudio.
  */
 export default class Log {
-    private static readonly TAG = this.name
-    private static _options: ILogOptions = {
+    private static _instance: Log
+    private constructor() {
+
+    }
+    static get(): Log {
+        if(!this._instance) {
+            Log._instance = new Log()
+        }
+        return this._instance
+    }
+
+    private readonly TAG = this.constructor.name
+    private _options: ILogOptions = {
         logLevel: EEasyDebugLogLevel.None,
         stackLevel: EEasyDebugLogLevel.Warning,
         useColors: false,
@@ -35,9 +46,12 @@ export default class Log {
      * Provide options for logging.
      * @param options
      */
-    static setOptions(options: ILogOptions): void {
+    setOptions(options: ILogOptions) {
         this._options = options
         this.i(this.TAG, 'Options updated, log and stack levels are now', EEasyDebugLogLevel[options.logLevel], EEasyDebugLogLevel[options.stackLevel])
+    }
+    static setOptions(options: ILogOptions) {
+        this.get().setOptions(options)
     }
 
     /**
@@ -45,33 +59,54 @@ export default class Log {
      * The default is none, which won't print anything.
      * @param logLevel
      */
-    static setLogLevel(logLevel: EEasyDebugLogLevel) {
+    setLogLevel(logLevel: EEasyDebugLogLevel) {
         this._options.logLevel = logLevel
         this.i(this.TAG, 'Logging level is now', EEasyDebugLogLevel[logLevel])
     }
-    static setStackLevel(stackLevel: EEasyDebugLogLevel) {
+    static setLogLevel(logLevel: EEasyDebugLogLevel) {
+        this.get().setLogLevel(logLevel)
+    }
+    setStackLevel(stackLevel: EEasyDebugLogLevel) {
         this._options.stackLevel = stackLevel
         this.i(this.TAG, 'Stack level is now', EEasyDebugLogLevel[stackLevel])
     }
+    static setStackLevel(stackLevel: EEasyDebugLogLevel) {
+        this.get().setStackLevel(stackLevel)
+    }
 
-    static v(tag: string, message: string, ...extras: any[]) {
+    v(tag: string, message: string, ...extras: any[]) {
         this.outputToConsole(tag, EEasyDebugLogLevel.Verbose, message, ...extras)
     }
+    static v(tag: string, message: string, ...extras: any[]) {
+        this.get().v(tag, message, ...extras)
+    }
 
-    static d(tag: string, message: string, ...extras: any[]) {
+    d(tag: string, message: string, ...extras: any[]) {
         this.outputToConsole(tag, EEasyDebugLogLevel.Debug, message, ...extras)
     }
+    static d(tag: string, message: string, ...extras: any[]) {
+        this.get().d(tag, message, ...extras)
+    }
 
-    static i(tag: string, message: string, ...extras: any[]) {
+    i(tag: string, message: string, ...extras: any[]) {
         this.outputToConsole(tag, EEasyDebugLogLevel.Info, message, ...extras)
     }
-
-    static w(tag: string, message: string, ...extras: any[]) {
-        this.outputToConsole(tag, EEasyDebugLogLevel.Warning, message, ...extras)
+    static i(tag: string, message: string, ...extras: any[]) {
+        this.get().i(tag, message, ...extras)
     }
 
-    static e(tag: string, message: string, ...extras: any[]) {
+    w(tag: string, message: string, ...extras: any[]) {
+        this.outputToConsole(tag, EEasyDebugLogLevel.Warning, message, ...extras)
+    }
+    static w(tag: string, message: string, ...extras: any[]) {
+        this.get().w(tag, message, ...extras)
+    }
+
+    e(tag: string, message: string, ...extras: any[]) {
         this.outputToConsole(tag, EEasyDebugLogLevel.Error, message, ...extras)
+    }
+    static e(tag: string, message: string, ...extras: any[]) {
+        this.get().e(tag, message, ...extras)
     }
 
     /**
@@ -82,7 +117,7 @@ export default class Log {
      * @param extras
      * @private
      */
-    private static outputToConsole(tag: string, level: EEasyDebugLogLevel, message: string, ...extras: any[]) {
+    private outputToConsole(tag: string, level: EEasyDebugLogLevel, message: string, ...extras: any[]) {
         if (
             this._options.logLevel === EEasyDebugLogLevel.None ||
             level.valueOf() < this._options.logLevel.valueOf()
