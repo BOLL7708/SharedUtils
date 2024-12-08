@@ -1,27 +1,27 @@
 import Log from './Log.mts'
 
-export interface IWebsocketsClientOptions {
+export interface IWebSocketClientOptions {
     clientName: string
     serverUrl: string
     reconnectIntervalSeconds?: number
     messageQueueing?: boolean
     messageMaxQueueSeconds?: number
-    onOpen?: IEasyWSOpenCallback
-    onClose?: IEasyWSCloseCallback
-    onMessage?: IEasyWSMessageCallback
-    onError?: IEasyWSErrorCallback
+    onOpen?: IWebSocketClientOpenCallback
+    onClose?: IWebSocketClientCloseCallback
+    onMessage?: IWebSocketClientMessageCallback
+    onError?: IWebSocketClientErrorCallback
     subProtocolValues?: string[]
 }
 
 export default class WebSocketClient {
     private readonly TAG
-    private _options: IWebsocketsClientOptions
-    private _onOpen: IEasyWSOpenCallback
-    private _onClose: IEasyWSCloseCallback
-    private _onMessage: IEasyWSMessageCallback
-    private _onError: IEasyWSErrorCallback
+    private _options: IWebSocketClientOptions
+    private _onOpen: IWebSocketClientOpenCallback
+    private _onClose: IWebSocketClientCloseCallback
+    private _onMessage: IWebSocketClientMessageCallback
+    private _onError: IWebSocketClientErrorCallback
 
-    constructor(options: IWebsocketsClientOptions) {
+    constructor(options: IWebSocketClientOptions) {
         this._options = options
         this.TAG = `${this.constructor.name}->${this._options.clientName}`
         this._onOpen = options.onOpen ?? (() => {
@@ -41,7 +41,7 @@ export default class WebSocketClient {
     private _socket?: WebSocket
     private _connected = false
     private _messageQueue: QueueItem[] = []
-    private _reconnectIntervalHandle?: number
+    private _reconnectIntervalHandle?: any // Mixed between runtimes and the language server used it unknown so we don't specify what this is, we just use it.
     private _resolverQueue: Map<string, (result: any) => void> = new Map()
 
     init() {
@@ -191,19 +191,19 @@ export default class WebSocketClient {
 }
 
 // region Callbacks
-export interface IEasyWSOpenCallback {
+export interface IWebSocketClientOpenCallback {
     (evt: Event): void
 }
 
-export interface IEasyWSCloseCallback {
+export interface IWebSocketClientCloseCallback {
     (evt: CloseEvent): void
 }
 
-export interface IEasyWSMessageCallback {
+export interface IWebSocketClientMessageCallback {
     (evt: MessageEvent): void
 }
 
-export interface IEasyWSErrorCallback {
+export interface IWebSocketClientErrorCallback {
     (evt: Event | ErrorEvent): void
 }
 
