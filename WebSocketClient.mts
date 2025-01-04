@@ -10,7 +10,7 @@ export interface IWebSocketClientOptions {
     onClose?: IWebSocketClientCloseCallback
     onMessage?: IWebSocketClientMessageCallback
     onError?: IWebSocketClientErrorCallback
-    subProtocolValues?: string[]
+    subprotocolValues?: string[]
 }
 
 export default class WebSocketClient {
@@ -97,7 +97,7 @@ export default class WebSocketClient {
     private connect() {
         this._socket?.close()
         this._socket = undefined
-        this._socket = new WebSocket(this._options.serverUrl, this._options.subProtocolValues)
+        this._socket = new WebSocket(this._options.serverUrl, this._options.subprotocolValues)
         this._socket.onopen = (ev => onOpen(this, ev))
         this._socket.onclose = (ev => onClose(this, ev))
         this._socket.onmessage = (ev => onMessage(this, ev))
