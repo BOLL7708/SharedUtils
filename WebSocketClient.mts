@@ -1,18 +1,64 @@
 import Log from './Log.mts'
 
+/**
+ * Options for the WebSocketClient.
+ */
 export interface IWebSocketClientOptions {
+    /**
+     * Used in logging.
+     */
     clientName: string
+    /**
+     * URL including protocol and port to the server we are connecting to, e.g. ws://127.0.0.1:7700
+     */
     serverUrl: string
+    /**
+     * The delay in seconds between reconnection attempts if the client was disconnected.
+     *
+     * Defaults to 30, which means it will wait 30 seconds between each attempt.
+     */
     reconnectIntervalSeconds?: number
+    /**
+     * Make messages queue up if the client is disconnected, will be sent when reconnected.
+     *
+     * Defaults to false which means the queue is disabled.
+     */
     messageQueueing?: boolean
+    /**
+     * How long a message should be retained in the queue before being skipped.
+     *
+     * Defaults to 0 which means nothing is skipped but retained forever until reconnected.
+     */
     messageMaxQueueSeconds?: number
+    /**
+     * Callback for when the client connects to a server.
+     */
     onOpen?: IWebSocketClientOpenCallback
+    /**
+     * Callback for when the client disconnects from the server.
+     */
     onClose?: IWebSocketClientCloseCallback
+    /**
+     * Callback for when the client receives messages from the server.
+     */
     onMessage?: IWebSocketClientMessageCallback
+    /**
+     * Callback for client errors.
+     */
     onError?: IWebSocketClientErrorCallback
+    /**
+     * List of subprotocol values to use when connecting to the server.
+     */
     subprotocolValues?: string[]
 }
 
+/**
+ * Resilient WebSocket Client implementation that supports:
+ * 1. Automatic reconnect
+ * 2. Message queueing upon disconnect
+ * 3. Promise based nonce messaging
+ * Required: Run .init() after instantiation to activate the connection.
+ */
 export default class WebSocketClient {
     private readonly TAG
     private _options: IWebSocketClientOptions
@@ -44,10 +90,17 @@ export default class WebSocketClient {
     private _reconnectIntervalHandle?: any // Mixed between runtimes and the language server used it unknown so we don't specify what this is, we just use it.
     private _resolverQueue: Map<string, (result: any) => void> = new Map()
 
+    /**
+     * Start the connection loop, no connection will be established unless this is executed.
+     */
     init() {
         this.startConnectLoop(true)
     }
 
+    /**
+     * Send a message to the server.
+     * @param body
+     */
     send(body: string | object | [] | number | boolean | null) {
         if (typeof body !== 'string') body = JSON.stringify(body)
         if (this._connected) {
