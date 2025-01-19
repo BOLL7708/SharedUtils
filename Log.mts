@@ -166,10 +166,12 @@ export default class Log {
                     .slice(3)
                     .filter((it)=>it.includes('file:///'))
                     .join('\n')
-                if(useColors) {
-                    console.log(`%c${message}`, color)
-                } else {
-                    console.log(message)
+                if(message.trim().length > 0) {
+                    if(useColors) {
+                        console.log(`%c${message}`, color)
+                    } else {
+                         console.log(message)
+                    }
                 }
             }
             // console.log(stack?.split('\n')[1]?.trim().split(' ')[2], ...extras)
