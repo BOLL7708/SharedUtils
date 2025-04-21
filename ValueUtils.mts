@@ -84,4 +84,18 @@ export default class ValueUtils {
     }
     // endregion
 
+    // region Crypto
+    /**
+     * Made to match the hashing done in PHP.
+     * @param password
+     */
+    static async hashForPhp(password: string): Promise<string> {
+        const encoder = new TextEncoder()
+        const data = encoder.encode(password)
+        const hashBuffer = await crypto.subtle.digest('SHA-256', data)
+        const hashArray = Array.from(new Uint8Array(hashBuffer))
+        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
+    }
+
+    // endregion
 }
