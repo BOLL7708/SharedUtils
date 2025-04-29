@@ -98,4 +98,11 @@ export default class ValueUtils {
     }
 
     // endregion
+
+    // region Dates
+    static daysBetween(start: Date, end: Date): number {
+        const durationMs = end.getTime() - start.getTime()
+        return Math.floor(durationMs / (1000 * 60 * 60 * 24))
+    }
+    // endregion
 }
