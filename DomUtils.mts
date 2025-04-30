@@ -9,8 +9,8 @@ export default class DomUtils {
         document.cookie = `${name}=; expires=${d.toUTCString()}; path=${path};`
     }
 
-    static buildBearerAuth(apiKey: string): RequestInit {
-        const headers = new Headers()
+    static buildBearerAuth(apiKey: string, baseHeaders: Record<string, string> = {}): RequestInit {
+        const headers = new Headers(baseHeaders)
         headers.set('Authorization', `Bearer ${apiKey}`)
         return {
             headers
