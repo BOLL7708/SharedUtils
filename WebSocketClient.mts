@@ -1,4 +1,5 @@
 import Log from './Log.mts'
+import Nonce from './Nonce.mts'
 
 /**
  * Options for the WebSocketClient.
@@ -240,6 +241,10 @@ export default class WebSocketClient {
             this.registerResolver(nonce, resolve, timeoutMs)
             this.send(body)
         })
+    }
+
+    getNonce(): string {
+        return Nonce.get(this._options.clientName);
     }
 }
 
