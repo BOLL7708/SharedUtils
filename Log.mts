@@ -1,13 +1,13 @@
 export interface ILogOptions {
-    logLevel: EEasyDebugLogLevel
-    stackLevel: EEasyDebugLogLevel
+    logLevel: ELogLevel
+    stackLevel: ELogLevel
     useColors: boolean
     tagPrefix: string
     tagPostfix: string
     capitalizeTag: boolean
 }
 
-export enum EEasyDebugLogLevel {
+export enum ELogLevel {
     None,
     Verbose,
     Debug,
@@ -34,8 +34,8 @@ export default class Log {
 
     private readonly TAG = this.constructor.name
     private _options: ILogOptions = {
-        logLevel: EEasyDebugLogLevel.None,
-        stackLevel: EEasyDebugLogLevel.Warning,
+        logLevel: ELogLevel.None,
+        stackLevel: ELogLevel.Warning,
         useColors: false,
         tagPrefix: '',
         tagPostfix: ' ',
@@ -48,7 +48,7 @@ export default class Log {
      */
     setOptions(options: ILogOptions) {
         this._options = options
-        this.i(this.TAG, 'Options updated, log and stack levels are now', EEasyDebugLogLevel[options.logLevel], EEasyDebugLogLevel[options.stackLevel])
+        this.i(this.TAG, 'Options updated, log and stack levels are now', ELogLevel[options.logLevel], ELogLevel[options.stackLevel])
     }
     static setOptions(options: ILogOptions) {
         this.get().setOptions(options)
@@ -59,51 +59,51 @@ export default class Log {
      * The default is none, which won't print anything.
      * @param logLevel
      */
-    setLogLevel(logLevel: EEasyDebugLogLevel) {
+    setLogLevel(logLevel: ELogLevel) {
         this._options.logLevel = logLevel
-        this.i(this.TAG, 'Logging level is now', EEasyDebugLogLevel[logLevel])
+        this.i(this.TAG, 'Logging level is now', ELogLevel[logLevel])
     }
-    static setLogLevel(logLevel: EEasyDebugLogLevel) {
+    static setLogLevel(logLevel: ELogLevel) {
         this.get().setLogLevel(logLevel)
     }
-    setStackLevel(stackLevel: EEasyDebugLogLevel) {
+    setStackLevel(stackLevel: ELogLevel) {
         this._options.stackLevel = stackLevel
-        this.i(this.TAG, 'Stack level is now', EEasyDebugLogLevel[stackLevel])
+        this.i(this.TAG, 'Stack level is now', ELogLevel[stackLevel])
     }
-    static setStackLevel(stackLevel: EEasyDebugLogLevel) {
+    static setStackLevel(stackLevel: ELogLevel) {
         this.get().setStackLevel(stackLevel)
     }
 
     v(tag: string, message: string, ...extras: any[]) {
-        this.outputToConsole(tag, EEasyDebugLogLevel.Verbose, message, ...extras)
+        this.outputToConsole(tag, ELogLevel.Verbose, message, ...extras)
     }
     static v(tag: string, message: string, ...extras: any[]) {
         this.get().v(tag, message, ...extras)
     }
 
     d(tag: string, message: string, ...extras: any[]) {
-        this.outputToConsole(tag, EEasyDebugLogLevel.Debug, message, ...extras)
+        this.outputToConsole(tag, ELogLevel.Debug, message, ...extras)
     }
     static d(tag: string, message: string, ...extras: any[]) {
         this.get().d(tag, message, ...extras)
     }
 
     i(tag: string, message: string, ...extras: any[]) {
-        this.outputToConsole(tag, EEasyDebugLogLevel.Info, message, ...extras)
+        this.outputToConsole(tag, ELogLevel.Info, message, ...extras)
     }
     static i(tag: string, message: string, ...extras: any[]) {
         this.get().i(tag, message, ...extras)
     }
 
     w(tag: string, message: string, ...extras: any[]) {
-        this.outputToConsole(tag, EEasyDebugLogLevel.Warning, message, ...extras)
+        this.outputToConsole(tag, ELogLevel.Warning, message, ...extras)
     }
     static w(tag: string, message: string, ...extras: any[]) {
         this.get().w(tag, message, ...extras)
     }
 
     e(tag: string, message: string, ...extras: any[]) {
-        this.outputToConsole(tag, EEasyDebugLogLevel.Error, message, ...extras)
+        this.outputToConsole(tag, ELogLevel.Error, message, ...extras)
     }
     static e(tag: string, message: string, ...extras: any[]) {
         this.get().e(tag, message, ...extras)
@@ -117,9 +117,9 @@ export default class Log {
      * @param extras
      * @private
      */
-    private outputToConsole(tag: string, level: EEasyDebugLogLevel, message: string, ...extras: any[]) {
+    private outputToConsole(tag: string, level: ELogLevel, message: string, ...extras: any[]) {
         if (
-            this._options.logLevel === EEasyDebugLogLevel.None ||
+            this._options.logLevel === ELogLevel.None ||
             level.valueOf() < this._options.logLevel.valueOf()
         ) return
 
@@ -128,34 +128,34 @@ export default class Log {
         const logMessage = `${useColors}${this._options.tagPrefix}${tag}${this._options.tagPostfix}${message}`
         let color: string = ''
         switch (level) {
-            case EEasyDebugLogLevel.Verbose:
+            case ELogLevel.Verbose:
                 color = 'color: gray;'
                 if (useColors) extras.unshift(color)
                 console.log(logMessage, ...extras)
                 break
-            case EEasyDebugLogLevel.Debug:
+            case ELogLevel.Debug:
                 color = 'color: turquoise;'
                 if (useColors) extras.unshift(color)
                 console.log(logMessage, ...extras)
                 break
-            case EEasyDebugLogLevel.Info:
+            case ELogLevel.Info:
                 color = 'color: olivedrab;'
                 if (useColors) extras.unshift(color)
                 console.log(logMessage, ...extras)
                 break
-            case EEasyDebugLogLevel.Warning:
+            case ELogLevel.Warning:
                 color = 'color: yellow;'
                 if (useColors) extras.unshift(color)
                 console.log(logMessage, ...extras)
                 break
-            case EEasyDebugLogLevel.Error:
+            case ELogLevel.Error:
                 color = 'color: red;'
                 if (useColors) extras.unshift(color)
                 console.log(logMessage, ...extras)
                 break
         }
         if(
-            this._options.stackLevel !== EEasyDebugLogLevel.None
+            this._options.stackLevel !== ELogLevel.None
             && this._options.stackLevel <= level.valueOf()
         ) {
             const error = new Error()

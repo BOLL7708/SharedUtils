@@ -61,7 +61,7 @@ export interface IWebSocketClientOptions {
  * Required: Run .init() after instantiation to activate the connection.
  */
 export default class WebSocketClient {
-    private readonly TAG
+    private readonly TAG: string
     private _options: IWebSocketClientOptions
     private _onOpen: IWebSocketClientOpenCallback
     private _onClose: IWebSocketClientCloseCallback
