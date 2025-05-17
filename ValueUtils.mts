@@ -1,4 +1,24 @@
 export default class ValueUtils {
+    // region Universal
+    static isEmpty(value: any): boolean {
+        if (value === undefined || value === null) return true
+        if (typeof value === 'string') return value.length === 0
+        if (Array.isArray(value)) return value.length === 0
+        if (typeof value === 'object') return Object.keys(value).length === 0
+        if (typeof value === 'number') return isNaN(value) || value === 0
+        if (typeof value === 'boolean') return !value
+        return false
+    }
+    static isBlank(value: any): boolean {
+        if(this.isEmpty(value)) return true
+        if (typeof value === 'string') {
+            if(value.trim().length === 0) return true
+            if(value.replace(/\s/g, '').length === 0) return true
+        }
+        return false
+    }
+    // endregion
+
     // region Booleans
     /**
      * Returns the deduced boolean value for a string, provided default or false if no match.
@@ -44,7 +64,10 @@ export default class ValueUtils {
     // endregion
 
     // region Strings
-
+    static capitalizeFirstLetter(str: string): string {
+        if (str.length === 0) return str
+        return str.charAt(0).toUpperCase() + str.slice(1)
+    }
     // endregion
 
     // region Arrays
@@ -97,6 +120,49 @@ export default class ValueUtils {
         return hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
     }
 
+    static generateSalt(length = 32): Uint8Array {
+        const salt = new Uint8Array(length);
+        crypto.getRandomValues(salt);
+        return salt;
+    }
+
+    static encodeSalt(uint8array: Uint8Array): string {
+        return btoa(String.fromCharCode(...uint8array))
+    }
+    static decodeSalt(salt: string): Uint8Array {
+        const binaryString = atob(salt)
+        const len = binaryString.length
+        const bytes = new Uint8Array(len)
+        for (let i = 0; i < len; i++) {
+            bytes[i] = binaryString.charCodeAt(i)
+        }
+        return bytes
+    }
+
+    static async hashPassword(password: string, salt: Uint8Array): Promise<string> {
+        const enc = new TextEncoder();
+        const keyMaterial = await crypto.subtle.importKey(
+            "raw",
+            enc.encode(password),
+            "PBKDF2",
+            false,
+            ["deriveBits"]
+        );
+
+        const derivedBits = await crypto.subtle.deriveBits(
+            {
+                name: "PBKDF2",
+                salt: salt,
+                iterations: 100_000,
+                hash: "SHA-512",
+            },
+            keyMaterial,
+            256+128
+        );
+
+        const hashBytes = new Uint8Array(derivedBits);
+        return btoa(String.fromCharCode(...hashBytes));
+    }
     // endregion
 
     // region Dates

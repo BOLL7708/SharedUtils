@@ -19,6 +19,9 @@ export enum ELogLevel {
 /**
  * Convenience class for outputting various levels of logging to the console.
  * Takes inspiration from LogCat in AndroidStudio.
+ *
+ * This is storing an instance, as that instance is needed where this is used as a proxy.
+ * This is the case for some runtime classes that not always have access to this class.
  */
 export default class Log {
     private static _instance: Log
@@ -109,6 +112,36 @@ export default class Log {
         this.get().e(tag, message, ...extras)
     }
 
+    private buildMessage(tag: string, level: ELogLevel, message: string, ...extras: any[]): [string, string, string, any[]] {
+        const useColors = this._options.useColors ? '%c' : ''
+        if (this._options.capitalizeTag) tag = tag.toLocaleUpperCase()
+        const logMessage = `${useColors}${this._options.tagPrefix}${tag}${this._options.tagPostfix}${message}`
+        let color: string = ''
+        switch (level) {
+            case ELogLevel.Verbose:
+                color = 'color: gray;'
+                if (useColors) extras.unshift(color)
+                break
+            case ELogLevel.Debug:
+                color = 'color: turquoise;'
+                if (useColors) extras.unshift(color)
+                break
+            case ELogLevel.Info:
+                color = 'color: olivedrab;'
+                if (useColors) extras.unshift(color)
+                break
+            case ELogLevel.Warning:
+                color = 'color: yellow;'
+                if (useColors) extras.unshift(color)
+                break
+            case ELogLevel.Error:
+                color = 'color: red;'
+                if (useColors) extras.unshift(color)
+                break
+        }
+        return [useColors, color, logMessage, extras]
+    }
+
     /**
      * Log message if the provided level is equal to or higher than the set level.
      * @param tag
@@ -122,38 +155,8 @@ export default class Log {
             this._options.logLevel === ELogLevel.None ||
             level.valueOf() < this._options.logLevel.valueOf()
         ) return
-
-        const useColors = this._options.useColors ? '%c' : ''
-        if (this._options.capitalizeTag) tag = tag.toLocaleUpperCase()
-        const logMessage = `${useColors}${this._options.tagPrefix}${tag}${this._options.tagPostfix}${message}`
-        let color: string = ''
-        switch (level) {
-            case ELogLevel.Verbose:
-                color = 'color: gray;'
-                if (useColors) extras.unshift(color)
-                console.log(logMessage, ...extras)
-                break
-            case ELogLevel.Debug:
-                color = 'color: turquoise;'
-                if (useColors) extras.unshift(color)
-                console.log(logMessage, ...extras)
-                break
-            case ELogLevel.Info:
-                color = 'color: olivedrab;'
-                if (useColors) extras.unshift(color)
-                console.log(logMessage, ...extras)
-                break
-            case ELogLevel.Warning:
-                color = 'color: yellow;'
-                if (useColors) extras.unshift(color)
-                console.log(logMessage, ...extras)
-                break
-            case ELogLevel.Error:
-                color = 'color: red;'
-                if (useColors) extras.unshift(color)
-                console.log(logMessage, ...extras)
-                break
-        }
+        const [useColors, color, logMessage, allExtras] = this.buildMessage(tag, level, message, ...extras)
+        console.log(logMessage, ...allExtras)
         if(
             this._options.stackLevel !== ELogLevel.None
             && this._options.stackLevel <= level.valueOf()
@@ -170,7 +173,7 @@ export default class Log {
                     if(useColors) {
                         console.log(`%c${message}`, color)
                     } else {
-                         console.log(message)
+                        console.log(message)
                     }
                 }
             }
