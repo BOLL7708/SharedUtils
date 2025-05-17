@@ -17,6 +17,20 @@ export default class ValueUtils {
         }
         return false
     }
+    static safeBase64Decode(value: string): any | undefined {
+        try {
+            return atob(value)
+        } catch (e) {
+            return undefined
+        }
+    }
+    static safeBase64Encode(value: string): string | undefined {
+        try {
+            return btoa(value)
+        } catch (e) {
+            return undefined
+        }
+    }
     // endregion
 
     // region Booleans
@@ -127,10 +141,10 @@ export default class ValueUtils {
     }
 
     static encodeSalt(uint8array: Uint8Array): string {
-        return btoa(String.fromCharCode(...uint8array))
+        return this.safeBase64Encode(String.fromCharCode(...uint8array)) ?? ''
     }
     static decodeSalt(salt: string): Uint8Array {
-        const binaryString = atob(salt)
+        const binaryString = this.safeBase64Decode(salt) ?? ''
         const len = binaryString.length
         const bytes = new Uint8Array(len)
         for (let i = 0; i < len; i++) {
