@@ -37,11 +37,11 @@ export default class Log {
 
     private readonly TAG = this.constructor.name
     private _options: ILogOptions = {
-        logLevel: ELogLevel.None,
-        stackLevel: ELogLevel.Warning,
-        useColors: false,
-        tagPrefix: '',
-        tagPostfix: ' ',
+        logLevel: ELogLevel.Warning,
+        stackLevel: ELogLevel.Error,
+        useColors: true,
+        tagPrefix: '[',
+        tagPostfix: '] ',
         capitalizeTag: false
     }
 

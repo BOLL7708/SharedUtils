@@ -9,14 +9,16 @@ export default class ValueUtils {
         if (typeof value === 'boolean') return !value
         return false
     }
+
     static isBlank(value: any): boolean {
-        if(this.isEmpty(value)) return true
+        if (this.isEmpty(value)) return true
         if (typeof value === 'string') {
-            if(value.trim().length === 0) return true
-            if(value.replace(/\s/g, '').length === 0) return true
+            if (value.trim().length === 0) return true
+            if (value.replace(/\s/g, '').length === 0) return true
         }
         return false
     }
+
     static safeBase64Decode(value: string): any | undefined {
         try {
             return atob(value)
@@ -24,6 +26,7 @@ export default class ValueUtils {
             return undefined
         }
     }
+
     static safeBase64Encode(value: string): string | undefined {
         try {
             return btoa(value)
@@ -31,6 +34,29 @@ export default class ValueUtils {
             return undefined
         }
     }
+
+    static safeBase64UrlDecode(value: string): any | undefined {
+        try {
+            return atob(
+                value
+                    .replace(/-/g, '+')
+                    .replace(/_/g, '/'))
+        } catch (e) {
+            return undefined
+        }
+    }
+
+    static safeBase64UrlEncode(value: string): string | undefined {
+        try {
+            return btoa(value)
+                .replace(/\+/g, '-')
+                .replace(/\//g, '_')
+                .replace(/=/g, '')
+        } catch (e) {
+            return undefined
+        }
+    }
+
     // endregion
 
     // region Booleans
@@ -82,6 +108,7 @@ export default class ValueUtils {
         if (str.length === 0) return str
         return str.charAt(0).toUpperCase() + str.slice(1)
     }
+
     // endregion
 
     // region Arrays
@@ -119,6 +146,7 @@ export default class ValueUtils {
     static clone<Type>(data: Type): Type {
         return JSON.parse(JSON.stringify(data)) as Type
     }
+
     // endregion
 
     // region Crypto
@@ -135,16 +163,22 @@ export default class ValueUtils {
     }
 
     static generateSalt(length = 32): Uint8Array {
-        const salt = new Uint8Array(length);
-        crypto.getRandomValues(salt);
-        return salt;
+        const salt = new Uint8Array(length)
+        crypto.getRandomValues(salt)
+        return salt
     }
 
-    static encodeSalt(uint8array: Uint8Array): string {
-        return this.safeBase64Encode(String.fromCharCode(...uint8array)) ?? ''
+    static encodeBytes(uint8array: Uint8Array, urlSafe: boolean = false): string {
+        return urlSafe
+            ? this.safeBase64UrlEncode(String.fromCharCode(...uint8array)) ?? ''
+            : this.safeBase64Encode(String.fromCharCode(...uint8array)) ?? ''
     }
-    static decodeSalt(salt: string): Uint8Array {
-        const binaryString = this.safeBase64Decode(salt) ?? ''
+
+    static decodeBytes(salt: string): Uint8Array {
+        const urlSafe = salt.includes('-') || salt.includes('_')
+        const binaryString = urlSafe
+            ? this.safeBase64UrlDecode(salt) ?? ''
+            : this.safeBase64Decode(salt) ?? ''
         const len = binaryString.length
         const bytes = new Uint8Array(len)
         for (let i = 0; i < len; i++) {
@@ -153,30 +187,29 @@ export default class ValueUtils {
         return bytes
     }
 
-    static async hashPassword(password: string, salt: Uint8Array): Promise<string> {
-        const enc = new TextEncoder();
+    static async hashPassword(password: string, salt: Uint8Array, urlSafe: boolean = false): Promise<string> {
+        const enc = new TextEncoder()
         const keyMaterial = await crypto.subtle.importKey(
-            "raw",
+            'raw',
             enc.encode(password),
-            "PBKDF2",
+            'PBKDF2',
             false,
-            ["deriveBits"]
-        );
-
+            ['deriveBits']
+        )
         const derivedBits = await crypto.subtle.deriveBits(
             {
-                name: "PBKDF2",
+                name: 'PBKDF2',
                 salt: salt,
                 iterations: 100_000,
-                hash: "SHA-512",
+                hash: 'SHA-512'
             },
             keyMaterial,
-            256+128
-        );
-
-        const hashBytes = new Uint8Array(derivedBits);
-        return btoa(String.fromCharCode(...hashBytes));
+            256 + 128
+        )
+        const hashBytes = new Uint8Array(derivedBits)
+        return this.encodeBytes(hashBytes, urlSafe)
     }
+
     // endregion
 
     // region Dates
@@ -184,5 +217,6 @@ export default class ValueUtils {
         const durationMs = end.getTime() - start.getTime()
         return Math.floor(durationMs / (1000 * 60 * 60 * 24))
     }
+
     // endregion
 }
