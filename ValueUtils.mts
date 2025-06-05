@@ -1,3 +1,5 @@
+import Log from './Log.mts'
+
 export default class ValueUtils {
     // region Universal
     static isEmpty(value: any): boolean {
@@ -104,9 +106,27 @@ export default class ValueUtils {
     // endregion
 
     // region Strings
+    static isNotEmpty(text: any): text is string {
+        return typeof text === 'string' && text.length > 0
+    }
+
+    static isNotBlank(text: any): text is string {
+        return typeof text === 'string' && text.trim().length > 0 && text.replace(/\s/g, '').length > 0
+    }
+
     static capitalizeFirstLetter(str: string): string {
         if (str.length === 0) return str
         return str.charAt(0).toUpperCase() + str.slice(1)
+    }
+
+    static safeJsonParse<T>(json: any): T | undefined {
+        if(typeof json !== 'string')  return undefined
+        try {
+            return JSON.parse(json) as T
+        } catch (e) {
+            Log.e(this.name, 'Failed to parse JSON', e)
+            return undefined
+        }
     }
 
     // endregion
