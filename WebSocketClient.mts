@@ -88,13 +88,15 @@ export default class WebSocketClient {
     private _socket?: WebSocket
     private _connected = false
     private _messageQueue: QueueItem[] = []
-    private _reconnectIntervalHandle?: any // Mixed between runtimes and the language server used it unknown so we don't specify what this is, we just use it.
+    private _reconnectIntervalHandle: number = 0
     private _resolverQueue: Map<string, (result: any) => void> = new Map()
+    private _shouldReconnect = false
 
     /**
      * Start the connection loop, no connection will be established unless this is executed.
      */
     init() {
+        this._shouldReconnect = true
         this.startConnectLoop(true)
     }
 
@@ -117,6 +119,7 @@ export default class WebSocketClient {
      * Will close the connection and restart it.
      */
     reconnect() {
+        this._shouldReconnect = true
         this._socket?.close()
         this.startConnectLoop(true)
     }
@@ -125,6 +128,7 @@ export default class WebSocketClient {
      * Will force the connection to close and stay closed until manually triggering a reconnection.
      */
     disconnect() {
+        this._shouldReconnect = false
         this.stopConnectLoop()
         this._socket?.close()
         this._socket = undefined
@@ -157,7 +161,7 @@ export default class WebSocketClient {
         this._socket.onmessage = (ev => onMessage(this, ev))
         this._socket.onerror = (ev => onError(this, ev))
 
-        function onOpen(self: WebSocketClient, ev: Event) {
+        const onOpen = (self: WebSocketClient, ev: Event) => {
             Log.i(self.TAG, 'Connected')
             self._connected = true
             self.stopConnectLoop()
@@ -174,19 +178,19 @@ export default class WebSocketClient {
             self._messageQueue = []
         }
 
-        function onClose(self: WebSocketClient, ev: CloseEvent) {
+        const onClose = (self: WebSocketClient, ev: CloseEvent) => {
             Log.i(self.TAG, 'Disconnected')
             self._connected = false
-            self.startConnectLoop()
+            if (this._shouldReconnect) self.startConnectLoop()
             self._onClose(ev)
         }
 
-        function onMessage(self: WebSocketClient, ev: MessageEvent) {
+        const onMessage = (self: WebSocketClient, ev: MessageEvent) => {
             Log.v(self.TAG, 'Received message', ev.data)
             self._onMessage(ev)
         }
 
-        function onError(self: WebSocketClient, ev: Event | ErrorEvent) {
+        const onError = (self: WebSocketClient, ev: Event | ErrorEvent) => {
             const message = ev instanceof ErrorEvent ? ev.message : 'Unknown issue'
             Log.e(self.TAG, 'Error', message)
             self._socket?.close()
@@ -244,7 +248,7 @@ export default class WebSocketClient {
     }
 
     getNonce(): string {
-        return Nonce.get(this._options.clientName);
+        return Nonce.get(this._options.clientName)
     }
 }
 

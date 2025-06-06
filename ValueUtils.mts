@@ -150,7 +150,9 @@ export default class ValueUtils {
     // endregion
 
     // region Objects
-
+    static isObject(obj: any): obj is object {
+        return typeof obj === 'object' && obj !== null
+    }
     // endregion
 
     // region Generic
