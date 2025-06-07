@@ -129,6 +129,14 @@ export default class ValueUtils {
         }
     }
 
+    /**
+     * Returns a dictionary that maps lower-case values to original case values from a string array.
+     * @param inputKeys
+     */
+    static getCaseMap(inputKeys: string[]): Record<string, string> {
+        return Object.fromEntries(inputKeys.map(key => [key.toLowerCase(), key]))
+    }
+
     // endregion
 
     // region Arrays
