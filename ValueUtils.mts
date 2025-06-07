@@ -173,6 +173,16 @@ export default class ValueUtils {
 
     // region Crypto
     /**
+     * Legacy password hash used in accessory applications.
+     * @param message
+     */
+    static async hashPasswordSimple(message: string): Promise<string> {
+        const textBuffer = new TextEncoder().encode(message) // encode as UTF-8
+        const hashBuffer = await crypto.subtle.digest('SHA-256', textBuffer) // hash the message
+        const byteArray = Array.from(new Uint8Array(hashBuffer)) // convert ArrayBuffer to Array
+        return btoa(String.fromCharCode(...byteArray))
+    }
+    /**
      * Made to match the hashing done in PHP.
      * @param password
      */
