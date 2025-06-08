@@ -1,5 +1,5 @@
-import Log from './Log.mts'
-import Nonce from './Nonce.mts'
+import Log from './Log.ts'
+import Nonce from './Nonce.ts'
 
 /**
  * Options for the WebSocketClient.

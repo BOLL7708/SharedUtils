@@ -1,4 +1,4 @@
-import Log from './Log.mts'
+import Log from './Log.ts'
 
 export default class ValueUtils {
     // region Universal

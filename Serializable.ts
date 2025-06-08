@@ -1,4 +1,4 @@
-import ValueUtils from './ValueUtils.mts'
+import ValueUtils from './ValueUtils.ts'
 
 export type TAbstractDataInput = string | { [key: string]: any } | undefined
 
