@@ -1,5 +1,5 @@
 import Log from './Log.ts'
-import Nonce from './Nonce.ts'
+import SerializedId from './SerializedId.ts'
 
 /**
  * Options for the WebSocketClient.
@@ -57,7 +57,7 @@ export interface IWebSocketClientOptions {
  * Resilient WebSocket Client implementation that supports:
  * 1. Automatic reconnect
  * 2. Message queueing upon disconnect
- * 3. Promise based nonce messaging
+ * 3. Promise based messageId messaging
  * Required: Run .init() after instantiation to activate the connection.
  */
 export default class WebSocketClient {
@@ -200,15 +200,15 @@ export default class WebSocketClient {
     }
 
 
-    private registerResolver(nonce: string, resolver: (result: any) => void, timeoutMs: number) {
-        Log.v(this.TAG, 'Registered resolver for nonce with timeout (ms)', nonce, timeoutMs)
-        this._resolverQueue.set(nonce, resolver)
+    private registerResolver(messageId: string, resolver: (result: any) => void, timeoutMs: number) {
+        Log.v(this.TAG, 'Registered resolver for messageId with timeout (ms)', messageId, timeoutMs)
+        this._resolverQueue.set(messageId, resolver)
         setTimeout(() => {
-                const enqueuedResolver = this._resolverQueue.get(nonce)
+                const enqueuedResolver = this._resolverQueue.get(messageId)
                 if (enqueuedResolver) {
                     enqueuedResolver(undefined)
-                    this._resolverQueue.delete(nonce)
-                    Log.d(this.TAG, 'Resolver for nonce timed out (ms)', nonce, timeoutMs)
+                    this._resolverQueue.delete(messageId)
+                    Log.d(this.TAG, 'Resolver for messageId timed out (ms)', messageId, timeoutMs)
                 }
             },
             timeoutMs
@@ -217,38 +217,38 @@ export default class WebSocketClient {
 
     /**
      * Trigger a registered promise resolver with a result.
-     * @param nonce
+     * @param messageId
      * @param result
      */
-    resolvePromise(nonce: string, result: any) {
-        const resolver = this._resolverQueue.get(nonce)
+    resolvePromise(messageId: string, result: any) {
+        const resolver = this._resolverQueue.get(messageId)
         if (resolver) {
             resolver(result)
-            this._resolverQueue.delete(nonce)
-            Log.v(this.TAG, 'Ran resolver for nonce', nonce)
+            this._resolverQueue.delete(messageId)
+            Log.v(this.TAG, 'Ran resolver for messageId', messageId)
         } else {
-            Log.w(this.TAG, 'Nonce did not exist in resolver queue, cannot resolve promise', nonce)
+            Log.w(this.TAG, 'MessageId did not exist in resolver queue, cannot resolve promise', messageId)
         }
     }
 
     /**
-     * Will send a message and store a callback for a unique nonce value until the resolvePromise() method is called
-     * with that same nonce value, or the timeout has been triggered, where it will return undefined.
+     * Will send a message and store a callback for a unique messageId value until the resolvePromise() method is called
+     * with that same messageId value, or the timeout has been triggered, where it will return undefined.
      * @param body
-     * @param nonce
+     * @param messageId
      * @param timeoutMs
      */
-    sendMessageWithPromise<T>(body: string | object | [] | number | boolean | null, nonce: string, timeoutMs: number = 1000): Promise<T | undefined> {
-        if (nonce.length == 0) Log.w(this.TAG, 'Message with promise registered with empty nonce')
-        else Log.v(this.TAG, 'Sent message and registered resolver with nonce and timeout (ms)', nonce, timeoutMs)
-        return new Promise((resolve, _) => {
-            this.registerResolver(nonce, resolve, timeoutMs)
+    sendMessageWithPromise<T>(body: string | object | [] | number | boolean | null, messageId: string, timeoutMs: number = 1000): Promise<T | undefined> {
+        if (messageId.length == 0) Log.w(this.TAG, 'Message with promise registered with empty messageId')
+        else Log.v(this.TAG, 'Sent message and registered resolver with messageId and timeout (ms)', messageId, timeoutMs)
+        return new Promise((resolve) => {
+            this.registerResolver(messageId, resolve, timeoutMs)
             this.send(body)
         })
     }
 
-    getNonce(): string {
-        return Nonce.get(this._options.clientName)
+    getNextMessageId(): string {
+        return SerializedId.next(this._options.clientName)
     }
 }
 

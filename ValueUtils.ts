@@ -21,6 +21,14 @@ export default class ValueUtils {
         return false
     }
 
+    static nullIfEmpty<T>(value: T): T|null {
+        return this.isEmpty(value) ? null : value
+    }
+
+    static nullIfBlank<T>(value: T): T|null {
+        return this.isBlank(value) ? null : value
+    }
+
     static safeBase64Decode(value: string): any | undefined {
         try {
             return atob(value)
@@ -80,6 +88,12 @@ export default class ValueUtils {
     // endregion
 
     // region Numbers
+    /**
+     * Ensures that any arbitrary values becomes a number representation.
+     * The default fallback is zero.
+     * @param value
+     * @param fallback Defaults to 0
+     */
     static ensureNumber(value: any, fallback: number = 0): number {
         switch (typeof value) {
             case 'number':
@@ -135,6 +149,10 @@ export default class ValueUtils {
      */
     static getCaseMap(inputKeys: string[]): Record<string, string> {
         return Object.fromEntries(inputKeys.map(key => [key.toLowerCase(), key]))
+    }
+
+    static kebabCase(str: string): string {
+        return str.toLowerCase().replace(/\s/g, '-')
     }
 
     // endregion

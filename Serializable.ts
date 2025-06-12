@@ -10,10 +10,15 @@ export type TAbstractDataInput = string | { [key: string]: any } | undefined
 export default abstract class Serializable {
     /** Get all property keys even if the object was cloned */
     __keys(): string[] {
-        return [...new Set([ // Ensure only one occurrence per key
-            ...Object.keys(this), // Works on direct instances of the class
-            ...Object.keys(Object.getPrototypeOf(this)) // Required for Object.create() clones of the class
-        ])]
+        return [
+            // Ensure only one occurrence per key
+            ...new Set([
+                // Works on direct instances of the class
+                ...Object.keys(this),
+                // Required for Object.create() clones of the class
+                ...Object.keys(Object.getPrototypeOf(this))
+            ])
+        ]
     }
 
     /** Create a new instance of this object, with optional application of data */
