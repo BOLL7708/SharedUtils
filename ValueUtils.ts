@@ -2,7 +2,7 @@ import Log from './Log.ts'
 
 export default class ValueUtils {
     // region Universal
-    static isEmpty(value: any): boolean {
+    static isEmpty(value: unknown): boolean {
         if (value === undefined || value === null) return true
         if (typeof value === 'string') return value.length === 0
         if (Array.isArray(value)) return value.length === 0
@@ -12,7 +12,7 @@ export default class ValueUtils {
         return false
     }
 
-    static isBlank(value: any): boolean {
+    static isBlank(value: unknown): boolean {
         if (this.isEmpty(value)) return true
         if (typeof value === 'string') {
             if (value.trim().length === 0) return true
@@ -21,15 +21,15 @@ export default class ValueUtils {
         return false
     }
 
-    static nullIfEmpty<T>(value: T): T|null {
+    static nullIfEmpty<T>(value: T): T | null {
         return this.isEmpty(value) ? null : value
     }
 
-    static nullIfBlank<T>(value: T): T|null {
+    static nullIfBlank<T>(value: T): T | null {
         return this.isBlank(value) ? null : value
     }
 
-    static safeBase64Decode(value: string): any | undefined {
+    static safeBase64Decode(value: string): unknown | undefined {
         try {
             return atob(value)
         } catch (e) {
@@ -45,7 +45,7 @@ export default class ValueUtils {
         }
     }
 
-    static safeBase64UrlDecode(value: string): any | undefined {
+    static safeBase64UrlDecode(value: string): unknown | undefined {
         try {
             return atob(
                 value
@@ -98,9 +98,10 @@ export default class ValueUtils {
         switch (typeof value) {
             case 'number':
                 return isNaN(value) ? fallback : value
-            case 'string':
+            case 'string': {
                 const num = parseFloat(value)
                 return isNaN(num) ? fallback : num
+            }
             case 'boolean':
                 return value ? 1 : 0
             default:
@@ -120,11 +121,15 @@ export default class ValueUtils {
     // endregion
 
     // region Strings
-    static isNotEmpty(text: any): text is string {
+    static ensureString(text: unknown): string | undefined {
+        if (typeof text === 'string') return text
+    }
+
+    static isNotEmpty(text: unknown): text is string {
         return typeof text === 'string' && text.length > 0
     }
 
-    static isNotBlank(text: any): text is string {
+    static isNotBlank(text: unknown): text is string {
         return typeof text === 'string' && text.trim().length > 0 && text.replace(/\s/g, '').length > 0
     }
 
@@ -133,8 +138,8 @@ export default class ValueUtils {
         return str.charAt(0).toUpperCase() + str.slice(1)
     }
 
-    static safeJsonParse<T>(json: any): T | undefined {
-        if(typeof json !== 'string')  return undefined
+    static safeJsonParse<T>(json: unknown): T | undefined {
+        if (typeof json !== 'string') return undefined
         try {
             return JSON.parse(json) as T
         } catch (e) {
@@ -168,7 +173,7 @@ export default class ValueUtils {
      * @param haystack
      * @param needles
      */
-    static containsAll(needles: any[], haystack: any[]): boolean {
+    static containsAll(needles: unknown[], haystack: unknown[]): boolean {
         const haystackSet = new Set(haystack)
         return needles.every(item => haystackSet.has(item))
     }
@@ -176,9 +181,10 @@ export default class ValueUtils {
     // endregion
 
     // region Objects
-    static isObject(obj: any): obj is object {
+    static isObject(obj: unknown): obj is object {
         return typeof obj === 'object' && obj !== null
     }
+
     // endregion
 
     // region Generic
@@ -208,6 +214,7 @@ export default class ValueUtils {
         const byteArray = Array.from(new Uint8Array(hashBuffer)) // convert ArrayBuffer to Array
         return btoa(String.fromCharCode(...byteArray))
     }
+
     /**
      * Made to match the hashing done in PHP.
      * @param password
@@ -234,9 +241,11 @@ export default class ValueUtils {
 
     static decodeBytes(salt: string): Uint8Array {
         const urlSafe = salt.includes('-') || salt.includes('_')
-        const binaryString = urlSafe
-            ? this.safeBase64UrlDecode(salt) ?? ''
-            : this.safeBase64Decode(salt) ?? ''
+        const binaryString = this.ensureString(
+            urlSafe
+                ? this.safeBase64UrlDecode(salt)
+                : this.safeBase64Decode(salt)
+        ) ?? ''
         const len = binaryString.length
         const bytes = new Uint8Array(len)
         for (let i = 0; i < len; i++) {
