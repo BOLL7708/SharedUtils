@@ -1,5 +1,5 @@
 // Metadata shim to enable the property which otherwise stays undefined
-interface SymbolConstructor {
+export interface SymbolConstructor {
     readonly metadata: unique symbol
 }
 // @ts-ignore
