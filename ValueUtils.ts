@@ -1,3 +1,4 @@
+import {IDictionary} from './Dictionary.ts'
 import Log from './Log.ts'
 
 export default class ValueUtils {
@@ -201,6 +202,11 @@ export default class ValueUtils {
         return JSON.parse(JSON.stringify(data)) as Type
     }
 
+    static removeUndefined(obj: IDictionary<unknown>) {
+        for (const [key, value] of Object.entries(obj)) {
+            if (value === undefined) delete obj[key]
+        }
+    }
     // endregion
 
     // region Crypto
