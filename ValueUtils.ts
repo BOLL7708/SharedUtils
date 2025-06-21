@@ -179,6 +179,13 @@ export default class ValueUtils {
         return needles.every(item => haystackSet.has(item))
     }
 
+    static generateKeysForArray(array: any[], key: string): string[] {
+        return Array.from(
+            {length: array.length},
+            (_, i) => `${key}${i}`
+        )
+    }
+
     // endregion
 
     // region Objects
@@ -207,6 +214,7 @@ export default class ValueUtils {
             if (value === undefined) delete obj[key]
         }
     }
+
     // endregion
 
     // region Crypto
