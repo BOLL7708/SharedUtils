@@ -48,7 +48,7 @@ export default abstract class Serializable {
                 inputKeys.includes(targetKey) // Match property to class
                 && inputType === targetType // Ensure similar types, a class has default values for properties
             ) {
-                // Somewhat convoluted value application to support mixed-case property names
+                // Somewhat convoluted value application to support property names with mismatched casing
                 (this as any)[targetKeysMap[targetKey]] = (inputData as any)[inputKeysMap[targetKey]]
             }
         }

@@ -24,19 +24,19 @@ export enum ELogLevel {
  * This is the case for some runtime classes that not always have access to this class.
  */
 export default class Log {
-    private static _instance: Log
+    static #instance: Log
     private constructor() {
 
     }
     static get(): Log {
-        if(!this._instance) {
-            Log._instance = new Log()
+        if(!this.#instance) {
+            Log.#instance = new Log()
         }
-        return this._instance
+        return this.#instance
     }
 
-    private readonly TAG = this.constructor.name
-    private _options: ILogOptions = {
+    readonly #tag = this.constructor.name
+    #options: ILogOptions = {
         logLevel: ELogLevel.Warning,
         stackLevel: ELogLevel.Error,
         useColors: true,
@@ -49,11 +49,11 @@ export default class Log {
      * Provide options for logging.
      * @param options
      */
-    setOptions(options: ILogOptions) {
-        this._options = options
-        this.i(this.TAG, 'Options updated, log and stack levels are now', ELogLevel[options.logLevel], ELogLevel[options.stackLevel])
+    setOptions(options: Partial<ILogOptions>) {
+        this.#options = {...this.#options, ...options}
+        this.i(this.#tag, 'Options updated, log and stack levels are now', ELogLevel[this.#options.logLevel], ELogLevel[this.#options.stackLevel])
     }
-    static setOptions(options: ILogOptions) {
+    static setOptions(options: Partial<ILogOptions>) {
         this.get().setOptions(options)
     }
 
@@ -63,15 +63,15 @@ export default class Log {
      * @param logLevel
      */
     setLogLevel(logLevel: ELogLevel) {
-        this._options.logLevel = logLevel
-        this.i(this.TAG, 'Logging level is now', ELogLevel[logLevel])
+        this.#options.logLevel = logLevel
+        this.i(this.#tag, 'Logging level is now', ELogLevel[logLevel])
     }
     static setLogLevel(logLevel: ELogLevel) {
         this.get().setLogLevel(logLevel)
     }
     setStackLevel(stackLevel: ELogLevel) {
-        this._options.stackLevel = stackLevel
-        this.i(this.TAG, 'Stack level is now', ELogLevel[stackLevel])
+        this.#options.stackLevel = stackLevel
+        this.i(this.#tag, 'Stack level is now', ELogLevel[stackLevel])
     }
     static setStackLevel(stackLevel: ELogLevel) {
         this.get().setStackLevel(stackLevel)
@@ -113,9 +113,9 @@ export default class Log {
     }
 
     private buildMessage(tag: string, level: ELogLevel, message: string, ...extras: any[]): [string, string, string, any[]] {
-        const useColors = this._options.useColors ? '%c' : ''
-        if (this._options.capitalizeTag) tag = tag.toLocaleUpperCase()
-        const logMessage = `${useColors}${this._options.tagPrefix}${tag}${this._options.tagPostfix}${message}`
+        const useColors = this.#options.useColors ? '%c' : ''
+        if (this.#options.capitalizeTag) tag = tag.toLocaleUpperCase()
+        const logMessage = `${useColors}${this.#options.tagPrefix}${tag}${this.#options.tagPostfix}${message}`
         let color: string = ''
         switch (level) {
             case ELogLevel.Verbose:
@@ -152,14 +152,14 @@ export default class Log {
      */
     private outputToConsole(tag: string, level: ELogLevel, message: string, ...extras: any[]) {
         if (
-            this._options.logLevel === ELogLevel.None ||
-            level.valueOf() < this._options.logLevel.valueOf()
+            this.#options.logLevel === ELogLevel.None ||
+            level.valueOf() < this.#options.logLevel.valueOf()
         ) return
         const [useColors, color, logMessage, allExtras] = this.buildMessage(tag, level, message, ...extras)
         console.log(logMessage, ...allExtras)
         if(
-            this._options.stackLevel !== ELogLevel.None
-            && this._options.stackLevel <= level.valueOf()
+            this.#options.stackLevel !== ELogLevel.None
+            && this.#options.stackLevel <= level.valueOf()
         ) {
             const error = new Error()
             const stack = error.stack
