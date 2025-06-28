@@ -1,3 +1,4 @@
+import Log from './Log.ts'
 import ValueUtils from './ValueUtils.ts'
 
 export type TAbstractDataInput = string | { [key: string]: any } | undefined
@@ -39,17 +40,14 @@ export default abstract class Serializable {
         const inputKeysMap = ValueUtils.getCaseMap(Object.keys(inputData))
         const targetKeys = Object.keys(targetKeysMap)
         const inputKeys = Object.keys(inputKeysMap)
+        console.log({targetKeys, inputKeys})
         for (const targetKey of targetKeys) {
-            const targetValue = (this as any)[targetKeysMap[targetKey]]
-            const inputValue = (inputData as any)[inputKeysMap[targetKey]]
-            const targetType = typeof targetValue
-            const inputType = typeof inputValue
-            if (
-                inputKeys.includes(targetKey) // Match property to class
-                && inputType === targetType // Ensure similar types, a class has default values for properties
-            ) {
-                // Somewhat convoluted value application to support property names with mismatched casing
+            // Match property to class
+            if (inputKeys.includes(targetKey)) {
+                // Somewhat convoluted value application to support property names with mismatched casing.
                 (this as any)[targetKeysMap[targetKey]] = (inputData as any)[inputKeysMap[targetKey]]
+            } else {
+                Log.w(this.constructor.name, `Could not map ${targetKey} onto class.`)
             }
         }
 
