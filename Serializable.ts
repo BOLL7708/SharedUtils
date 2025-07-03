@@ -40,7 +40,6 @@ export default abstract class Serializable {
         const inputKeysMap = ValueUtils.getCaseMap(Object.keys(inputData))
         const targetKeys = Object.keys(targetKeysMap)
         const inputKeys = Object.keys(inputKeysMap)
-        console.log({targetKeys, inputKeys})
         for (const targetKey of targetKeys) {
             // Match property to class
             if (inputKeys.includes(targetKey)) {

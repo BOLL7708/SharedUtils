@@ -162,7 +162,7 @@ export default class WebSocketClient {
         this._socket.onerror = (ev => onError(this, ev))
 
         const onOpen = (self: WebSocketClient, ev: Event) => {
-            Log.i(self.TAG, 'Connected')
+            Log.d(self.TAG, 'Connected')
             self._connected = true
             self.stopConnectLoop()
             self._onOpen(ev)
@@ -179,7 +179,7 @@ export default class WebSocketClient {
         }
 
         const onClose = (self: WebSocketClient, ev: CloseEvent) => {
-            Log.i(self.TAG, 'Disconnected')
+            Log.d(self.TAG, 'Disconnected')
             self._connected = false
             if (this._shouldReconnect) self.startConnectLoop()
             self._onClose(ev)
@@ -192,7 +192,7 @@ export default class WebSocketClient {
 
         const onError = (self: WebSocketClient, ev: Event | ErrorEvent) => {
             const message = ev instanceof ErrorEvent ? ev.message : 'Unknown issue'
-            Log.e(self.TAG, 'Error', message)
+            Log.d(self.TAG, 'Error', message)
             self._socket?.close()
             self.startConnectLoop()
             self._onError(ev)

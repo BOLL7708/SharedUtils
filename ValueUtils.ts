@@ -68,6 +68,29 @@ export default class ValueUtils {
         }
     }
 
+    static tryToMatchTypes<T>(a: T, b: unknown): T|undefined {
+        const aType = typeof a
+        const bType = typeof b
+        if(aType === bType || Array.isArray(a) && Array.isArray(b)) return b as T
+
+        switch(aType) {
+            case 'string':
+                return this.ensureString(b) as T|undefined
+            case 'number':
+                const newB = this.ensureNumber(b, Infinity)
+                if(isNaN(newB) || newB === Infinity) return undefined
+                else return newB as T
+            case 'boolean':
+                return this.toBool(b) as T
+            case 'object':
+                if(Array.isArray(a)) {
+                    // TODO: Should we try anything here?
+                } else {
+                    // TODO: Should we try anything here?
+                }
+                break
+        }
+    }
     // endregion
 
     // region Booleans
