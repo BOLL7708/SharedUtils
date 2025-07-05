@@ -215,7 +215,10 @@ export default class ValueUtils {
     static isObject(obj: unknown): obj is object {
         return typeof obj === 'object' && obj !== null
     }
-
+    static getFieldValue(obj: Record<string, never>, field: string): string {
+        if (Object.hasOwn(obj, field)) return `${obj[field]}`
+        return ''
+    }
     // endregion
 
     // region Generic
