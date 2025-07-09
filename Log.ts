@@ -24,13 +24,18 @@ export enum ELogLevel {
  * This is the case for some runtime classes that not always have access to this class.
  */
 export default class Log {
+    static #isInternal = false
     static #instance: Log
-    private constructor() {
 
+    private constructor() {
+        if (!Log.#isInternal) throw new TypeError('This class is not constructable.')
+        Log.#isInternal = false
     }
+
     static get(): Log {
-        if(!this.#instance) {
-            Log.#instance = new Log()
+        if (!this.#instance) {
+            this.#isInternal = true
+            this.#instance = new Log()
         }
         return this.#instance
     }
@@ -53,6 +58,7 @@ export default class Log {
         this.#options = {...this.#options, ...options}
         this.i(this.#tag, 'Options updated, log and stack levels are now', ELogLevel[this.#options.logLevel], ELogLevel[this.#options.stackLevel])
     }
+
     static setOptions(options: Partial<ILogOptions>) {
         this.get().setOptions(options)
     }
@@ -66,13 +72,16 @@ export default class Log {
         this.#options.logLevel = logLevel
         this.i(this.#tag, 'Logging level is now', ELogLevel[logLevel])
     }
+
     static setLogLevel(logLevel: ELogLevel) {
         this.get().setLogLevel(logLevel)
     }
+
     setStackLevel(stackLevel: ELogLevel) {
         this.#options.stackLevel = stackLevel
         this.i(this.#tag, 'Stack level is now', ELogLevel[stackLevel])
     }
+
     static setStackLevel(stackLevel: ELogLevel) {
         this.get().setStackLevel(stackLevel)
     }
@@ -80,6 +89,7 @@ export default class Log {
     v(tag: string, message: string, ...extras: any[]) {
         this.outputToConsole(tag, ELogLevel.Verbose, message, ...extras)
     }
+
     static v(tag: string, message: string, ...extras: any[]) {
         this.get().v(tag, message, ...extras)
     }
@@ -87,6 +97,7 @@ export default class Log {
     d(tag: string, message: string, ...extras: any[]) {
         this.outputToConsole(tag, ELogLevel.Debug, message, ...extras)
     }
+
     static d(tag: string, message: string, ...extras: any[]) {
         this.get().d(tag, message, ...extras)
     }
@@ -94,6 +105,7 @@ export default class Log {
     i(tag: string, message: string, ...extras: any[]) {
         this.outputToConsole(tag, ELogLevel.Info, message, ...extras)
     }
+
     static i(tag: string, message: string, ...extras: any[]) {
         this.get().i(tag, message, ...extras)
     }
@@ -101,6 +113,7 @@ export default class Log {
     w(tag: string, message: string, ...extras: any[]) {
         this.outputToConsole(tag, ELogLevel.Warning, message, ...extras)
     }
+
     static w(tag: string, message: string, ...extras: any[]) {
         this.get().w(tag, message, ...extras)
     }
@@ -108,6 +121,7 @@ export default class Log {
     e(tag: string, message: string, ...extras: any[]) {
         this.outputToConsole(tag, ELogLevel.Error, message, ...extras)
     }
+
     static e(tag: string, message: string, ...extras: any[]) {
         this.get().e(tag, message, ...extras)
     }
@@ -157,27 +171,26 @@ export default class Log {
         ) return
         const [useColors, color, logMessage, allExtras] = this.buildMessage(tag, level, message, ...extras)
         console.log(logMessage, ...allExtras)
-        if(
+        if (
             this.#options.stackLevel !== ELogLevel.None
             && this.#options.stackLevel <= level.valueOf()
         ) {
             const error = new Error()
             const stack = error.stack
-            if(stack) {
+            if (stack) {
                 const message = stack
                     .split('\n')
                     .slice(3)
-                    .filter((it)=>it.includes('file:///'))
+                    .filter((it) => it.includes('file:///'))
                     .join('\n')
-                if(message.trim().length > 0) {
-                    if(useColors) {
+                if (message.trim().length > 0) {
+                    if (useColors) {
                         console.log(`%c${message}`, color)
                     } else {
                         console.log(message)
                     }
                 }
             }
-            // console.log(stack?.split('\n')[1]?.trim().split(' ')[2], ...extras)
         }
     }
 }

@@ -9,6 +9,9 @@ export type TAbstractDataInput = string | { [key: string]: any } | undefined
  * This is a naive data projection that only handles shallow objects for easy deserialization.
  */
 export default abstract class Serializable {
+    /* Allowed field types */
+    [key: string]: NonNullable<unknown>
+
     /** Get all property keys even if the object was cloned */
     __keys(): string[] {
         return [
