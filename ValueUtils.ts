@@ -68,44 +68,70 @@ export default class ValueUtils {
         }
     }
 
-    static tryToMatchTypes<T>(a: T, b: unknown): T|undefined {
-        const aType = typeof a
-        const bType = typeof b
-        if(aType === bType || Array.isArray(a) && Array.isArray(b)) return b as T
+    /**
+     * Tries to coerce b to be like a.
+     * @param a
+     * @param b
+     */
+    static tryToMatchTypes<T>(a: T, b: unknown): T | undefined {
+        if (a === null || a === undefined) return
+        if (
+            typeof a === typeof b
+            && (Array.isArray(a) == Array.isArray(b))
+        ) return b as T
 
-        switch(aType) {
+        switch (typeof a) {
             case 'string':
-                return this.ensureString(b) as T|undefined
+                return this.ensureString(
+                    typeof b === 'object' && !Array.isArray(b)
+                        ? JSON.stringify(b)
+                        : `${b}`
+                ) as T | undefined
             case 'number':
                 const newB = this.ensureNumber(b, Infinity)
-                if(isNaN(newB) || newB === Infinity) return undefined
-                else return newB as T
+                if (isNaN(newB) || newB === Infinity) {
+                    if (Array.isArray(b)) return b.length as T
+                    else if (typeof b === 'object' && b !== null) return Object.keys(b).length as T
+                    else return undefined
+                } else return newB as T
             case 'boolean':
                 return this.toBool(b) as T
             case 'object':
-                if(Array.isArray(a)) {
-                    // TODO: Should we try anything here?
+                if (Array.isArray(a)) {
+                    if (typeof b === 'object' && b !== null) {
+                        return Object.values(b) as T
+                    }
                 } else {
-                    // TODO: Should we try anything here?
+                    if (Array.isArray(b)) {
+                        return Object.fromEntries(Object.entries(b)) as T
+                    }
                 }
                 break
         }
     }
+
     // endregion
 
     // region Booleans
     /**
-     * Returns the deduced boolean value for a string, provided default or false if no match.
-     * @param boolStr
+     * Returns the deduced boolean value for a value, provided default or false if no match.
+     * @param boolValue
      * @param defaultValue
      */
-    static toBool(boolStr: string | undefined | null | unknown, defaultValue: boolean = false): boolean {
-        if (boolStr === undefined || boolStr === null || typeof boolStr !== 'string' || boolStr.length == 0) return defaultValue
-        const firstChar: string = boolStr.toLowerCase()[0]
-        const trueIsh: string[] = ['t', 'y', '1']
-        const falseIsh: string[] = ['f', 'n', '0']
-        if (trueIsh.includes(firstChar)) return true
-        if (falseIsh.includes(firstChar)) return false
+    static toBool(boolValue: unknown, defaultValue: boolean = false): boolean {
+        if (typeof boolValue === 'boolean') return boolValue
+        if (boolValue === undefined || boolValue === null) return defaultValue
+
+        if (Array.isArray(boolValue)) return !!boolValue.length
+        if (typeof boolValue === 'object') return !!Object.keys(boolValue).length
+
+        const boolStr = `${boolValue}`.toLowerCase()
+        const firstChar: string = boolStr[0]
+        if (['t', 'y', '1'].includes(firstChar)) return true
+        if (['f', 'n', '0'].includes(firstChar)) return false
+        if ('ok' === boolStr) return true
+        if (typeof boolValue === 'string') return !this.isBlank(boolValue)
+
         return defaultValue
     }
 
@@ -215,10 +241,12 @@ export default class ValueUtils {
     static isObject(obj: unknown): obj is object {
         return typeof obj === 'object' && obj !== null
     }
+
     static getFieldValue(obj: Record<string, never>, field: string): string {
-        if (Object.hasOwn(obj, field)) return `${obj[field]}`
+        if (obj.hasOwnProperty(field)) return `${obj[field]}`
         return ''
     }
+
     // endregion
 
     // region Generic
