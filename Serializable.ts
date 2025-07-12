@@ -1,9 +1,8 @@
-import {IDictionary} from './Dictionary.ts'
 import Log from './Log.ts'
 import ValueUtils from './ValueUtils.ts'
 
-export type TSerializableInput = string | TParsedInput | undefined
-type TParsedInput = Record<string, unknown>
+export type TSerializableInput = string | TSerializableParsedInput | undefined
+export type TSerializableParsedInput = Record<string, unknown>
 
 export type TSerializableMethod = (...args: never) => unknown
 type TSerializableTypes =
@@ -11,7 +10,7 @@ type TSerializableTypes =
     | TSerializableMethod
 
 /** Allowed types that can be assigned to fields on a Serializable inheritor, all possible JSON types. */
-export const serializableAllowedTypes: string[] = [... new Set([
+export const serializableAllowedTypes: string[] = [...new Set([
     typeof '',
     typeof 0,
     typeof {},
@@ -57,7 +56,7 @@ export default abstract class Serializable {
      * Application is shallow and naive, will not differentiate between types of objects.
      */
     __apply(input: TSerializableInput, allowedTypes: string[] = []): typeof this {
-        if(!allowedTypes.length) allowedTypes = serializableAllowedTypes
+        if (!allowedTypes.length) allowedTypes = serializableAllowedTypes
 
         // Skip if no input
         if (ValueUtils.isBlank(input)) {
@@ -67,7 +66,7 @@ export default abstract class Serializable {
 
         // Parse if input was a string
         if (typeof input === 'string') {
-            const jsonResult = ValueUtils.safeJsonParse<TParsedInput>(input)
+            const jsonResult = ValueUtils.safeJsonParse<TSerializableParsedInput>(input)
             if (jsonResult && typeof jsonResult === 'object') input = jsonResult
             else Log.w(this.#tag, 'Input was string but not suitable JSON.', {input})
         }
@@ -128,17 +127,15 @@ export default abstract class Serializable {
             if (Array.isArray(this[key]) && Array.isArray(input[inputKey])) {
                 this[key] = input[inputKey].filter(item => allowedTypes.includes(typeof item))
             }
-            else
             // Object values are also filtered on allowed types.
-            if (typeof input[inputKey] === 'object' && input[inputKey] !== null) {
+            else if (typeof input[inputKey] === 'object' && input[inputKey] !== null) {
                 this[key] = Object.fromEntries(
                     Object.entries(input[inputKey])
                         .filter(([_key, value]) => allowedTypes.includes(typeof value))
                 )
             }
-            else
             // Primitives are applied
-            if (allowedTypes.includes(typeof input[inputKey])) {
+            else if (allowedTypes.includes(typeof input[inputKey])) {
                 this[key] = input[inputKey] as TSerializableTypes
             } else Log.w(this.#tag, `Unable to apply ${key} to instance, value:`, input[inputKey])
         }
