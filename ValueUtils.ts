@@ -247,6 +247,16 @@ export default class ValueUtils {
         return ''
     }
 
+    static isObjectFilled(obj: unknown): boolean {
+        if(this.isObject(obj)) {
+            for(const value of Object.values(obj)) {
+                if(this.isBlank(value)) return false
+            }
+            return true
+        }
+        return false
+    }
+
     // endregion
 
     // region Generic
