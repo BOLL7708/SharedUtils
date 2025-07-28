@@ -242,9 +242,17 @@ export default class ValueUtils {
         return typeof obj === 'object' && obj !== null
     }
 
-    static getFieldValue(obj: Record<string, never>, field: string): string {
-        if (obj.hasOwnProperty(field)) return `${obj[field]}`
+    static getFieldValueAsStr(obj: Record<string, never>, field: string): string {
+        if (Object.hasOwn(obj, field)) return `${obj[field]}`
         return ''
+    }
+
+    static getFieldValueOrSet<T>(obj: Record<string, T>, field: string, value: T): T {
+        if(Object.hasOwn(obj, field)) return obj[field]
+        else {
+            obj[field] = value
+            return value
+        }
     }
 
     static isObjectFilled(obj: unknown): boolean {
