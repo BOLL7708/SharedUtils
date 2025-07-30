@@ -30,6 +30,11 @@ export default class ValueUtils {
         return this.isBlank(value) ? null : value
     }
 
+    static nullIfZeroOrLess<T>(value: T | null): T | null {
+        const n = this.ensureNumber(value, NaN)
+        return isNaN(n) || n <= 0 ? null : value
+    }
+
     static safeBase64Decode(value: string): unknown | undefined {
         try {
             return atob(value)
