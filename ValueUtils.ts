@@ -215,6 +215,18 @@ export default class ValueUtils {
         return str.toLowerCase().replace(/\s/g, '-')
     }
 
+    /**
+     * Removes the first word starting with an upper-case letter in a string.
+     * Always trims the incoming string.
+     * Returns the original trimmed string if the result ended up empty.
+     * @param str
+     */
+    static removeFirstWord(str: string) {
+        str = str.trim()
+        const result = str.replace(/^[A-Z][a-z0-9]*/, '')
+        if(this.isBlank(result)) return str
+        else return result
+    }
     // endregion
 
     // region Arrays
