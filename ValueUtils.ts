@@ -35,6 +35,11 @@ export default class ValueUtils {
         return isNaN(n) || n <= 0 ? null : value
     }
 
+    static undefinedIfZeroOrLess<T>(value: T | undefined): T | undefined {
+        const n = this.ensureNumber(value, NaN)
+        return isNaN(n) || n <= 0 ? undefined : value
+    }
+
     static safeBase64Decode(value: string): unknown | undefined {
         try {
             return atob(value)
@@ -250,6 +255,24 @@ export default class ValueUtils {
             {length: array.length},
             (_, i) => `${key}${i}`
         )
+    }
+
+    /**
+     * Split an array into included and excluded items, depending on a predicate.
+     * @param array Items that will get evaluated.
+     * @param predicate If returning true, the item is included.
+     */
+    static partition<T>(array: T[], predicate: (item: T) => boolean): {include: T[], exclude: T[]} {
+        const include: T[] = []
+        const exclude: T[] = []
+        for (const item of array) {
+            if(predicate(item)) {
+                include.push(item)
+            } else {
+                exclude.push(item)
+            }
+        }
+        return {include, exclude}
     }
 
     // endregion

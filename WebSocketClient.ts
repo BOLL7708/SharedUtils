@@ -61,42 +61,42 @@ export interface IWebSocketClientOptions {
  * Required: Run .init() after instantiation to activate the connection.
  */
 export default class WebSocketClient {
-    private readonly TAG: string
-    private _options: IWebSocketClientOptions
-    private _onOpen: IWebSocketClientOpenCallback
-    private _onClose: IWebSocketClientCloseCallback
-    private _onMessage: IWebSocketClientMessageCallback
-    private _onError: IWebSocketClientErrorCallback
+    readonly #tag: string
+    #options: IWebSocketClientOptions
+    #onOpen: IWebSocketClientOpenCallback
+    #onClose: IWebSocketClientCloseCallback
+    #onMessage: IWebSocketClientMessageCallback
+    #onError: IWebSocketClientErrorCallback
 
     constructor(options: IWebSocketClientOptions) {
-        this._options = options
-        this.TAG = `${this.constructor.name}->${this._options.clientName}`
-        this._onOpen = options.onOpen ?? (() => {
-            Log.v(this.TAG, 'onOpen callback not set')
+        this.#options = options
+        this.#tag = `${this.constructor.name}->${this.#options.clientName}`
+        this.#onOpen = options.onOpen ?? (() => {
+            Log.v(this.#tag, 'onOpen callback not set')
         })
-        this._onClose = options.onClose ?? (() => {
-            Log.v(this.TAG, 'onClose callback not set')
+        this.#onClose = options.onClose ?? (() => {
+            Log.v(this.#tag, 'onClose callback not set')
         })
-        this._onMessage = options.onMessage ?? (() => {
-            Log.v(this.TAG, 'onMessage callback not set')
+        this.#onMessage = options.onMessage ?? (() => {
+            Log.v(this.#tag, 'onMessage callback not set')
         })
-        this._onError = options.onError ?? (() => {
-            Log.v(this.TAG, 'onError callback not set')
+        this.#onError = options.onError ?? (() => {
+            Log.v(this.#tag, 'onError callback not set')
         })
     }
 
-    private _socket?: WebSocket
-    private _connected = false
-    private _messageQueue: QueueItem[] = []
-    private _reconnectIntervalHandle: number = 0
-    private _resolverQueue: Map<string, (result: any) => void> = new Map()
-    private _shouldReconnect = false
+    #socket?: WebSocket
+    #connected = false
+    #messageQueue: QueueItem[] = []
+    #reconnectIntervalHandle: number = 0
+    #resolverQueue: Map<string, (result: any) => void> = new Map()
+    #shouldReconnect = false
 
     /**
      * Start the connection loop, no connection will be established unless this is executed.
      */
     init() {
-        this._shouldReconnect = true
+        this.#shouldReconnect = true
         this.startConnectLoop(true)
     }
 
@@ -106,12 +106,12 @@ export default class WebSocketClient {
      */
     send(body: string | object | [] | number | boolean | null) {
         if (typeof body !== 'string') body = JSON.stringify(body)
-        if (this._connected) {
-            this._socket?.send(body)
-            Log.v(this.TAG, 'Sent message', body)
-        } else if (this._options.messageQueueing) {
-            this._messageQueue.push(new QueueItem(Date.now(), body))
-            Log.d(this.TAG, 'Not connected, adding to queue (entries)', this._messageQueue.length)
+        if (this.#connected) {
+            this.#socket?.send(body)
+            Log.v(this.#tag, 'Sent message', body)
+        } else if (this.#options.messageQueueing) {
+            this.#messageQueue.push(new QueueItem(Date.now(), body))
+            Log.d(this.#tag, 'Not connected, adding to queue (entries)', this.#messageQueue.length)
         }
     }
 
@@ -119,8 +119,8 @@ export default class WebSocketClient {
      * Will close the connection and restart it.
      */
     reconnect() {
-        this._shouldReconnect = true
-        this._socket?.close()
+        this.#shouldReconnect = true
+        this.#socket?.close()
         this.startConnectLoop(true)
     }
 
@@ -128,24 +128,24 @@ export default class WebSocketClient {
      * Will force the connection to close and stay closed until manually triggering a reconnection.
      */
     disconnect() {
-        this._shouldReconnect = false
+        this.#shouldReconnect = false
         this.stopConnectLoop()
-        this._socket?.close()
-        this._socket = undefined
+        this.#socket?.close()
+        this.#socket = undefined
     }
 
     isConnected(): boolean {
-        return this._connected
+        return this.#connected
     }
 
     private startConnectLoop(immediate: boolean = false) {
         this.stopConnectLoop()
-        this._reconnectIntervalHandle = setInterval(this.connect.bind(this), (this._options.reconnectIntervalSeconds ?? 30) * 1000)
+        this.#reconnectIntervalHandle = setInterval(this.connect.bind(this), (this.#options.reconnectIntervalSeconds ?? 30) * 1000)
         if (immediate) this.connect()
     }
 
     private stopConnectLoop() {
-        clearInterval(this._reconnectIntervalHandle)
+        clearInterval(this.#reconnectIntervalHandle)
     }
 
     /**
@@ -153,62 +153,62 @@ export default class WebSocketClient {
      * @private
      */
     private connect() {
-        this._socket?.close()
-        this._socket = undefined
-        this._socket = new WebSocket(this._options.serverUrl, this._options.subprotocolValues)
-        this._socket.onopen = (ev => onOpen(this, ev))
-        this._socket.onclose = (ev => onClose(this, ev))
-        this._socket.onmessage = (ev => onMessage(this, ev))
-        this._socket.onerror = (ev => onError(this, ev))
+        this.#socket?.close()
+        this.#socket = undefined
+        this.#socket = new WebSocket(this.#options.serverUrl, this.#options.subprotocolValues)
+        this.#socket.onopen = (ev => onOpen(this, ev))
+        this.#socket.onclose = (ev => onClose(this, ev))
+        this.#socket.onmessage = (ev => onMessage(this, ev))
+        this.#socket.onerror = (ev => onError(this, ev))
 
         const onOpen = (self: WebSocketClient, ev: Event) => {
-            Log.d(self.TAG, 'Connected')
-            self._connected = true
+            Log.d(self.#tag, 'Connected')
+            self.#connected = true
             self.stopConnectLoop()
-            self._onOpen(ev)
+            self.#onOpen(ev)
 
             // Will skip messages that are older than the maximum allowed if a limit is set.
-            const maxTime = (self._options.messageMaxQueueSeconds ?? 0) * 1000
+            const maxTime = (self.#options.messageMaxQueueSeconds ?? 0) * 1000
             const now = Date.now()
-            for (const item of self._messageQueue) {
+            for (const item of self.#messageQueue) {
                 if (maxTime == 0 || (now - item.time) <= maxTime) {
-                    self._socket?.send(item.message)
+                    self.#socket?.send(item.message)
                 }
             }
-            self._messageQueue = []
+            self.#messageQueue = []
         }
 
         const onClose = (self: WebSocketClient, ev: CloseEvent) => {
-            Log.d(self.TAG, 'Disconnected')
-            self._connected = false
-            if (this._shouldReconnect) self.startConnectLoop()
-            self._onClose(ev)
+            Log.d(self.#tag, 'Disconnected')
+            self.#connected = false
+            if (this.#shouldReconnect) self.startConnectLoop()
+            self.#onClose(ev)
         }
 
         const onMessage = (self: WebSocketClient, ev: MessageEvent) => {
-            Log.v(self.TAG, 'Received message', ev.data)
-            self._onMessage(ev)
+            Log.v(self.#tag, 'Received message', ev.data)
+            self.#onMessage(ev)
         }
 
         const onError = (self: WebSocketClient, ev: Event | ErrorEvent) => {
             const message = ev instanceof ErrorEvent ? ev.message : 'Unknown issue'
-            Log.d(self.TAG, 'Error', message)
-            self._socket?.close()
+            Log.d(self.#tag, 'Error', message)
+            self.#socket?.close()
             self.startConnectLoop()
-            self._onError(ev)
+            self.#onError(ev)
         }
     }
 
 
     private registerResolver(messageId: string, resolver: (result: any) => void, timeoutMs: number) {
-        Log.v(this.TAG, 'Registered resolver for messageId with timeout (ms)', messageId, timeoutMs)
-        this._resolverQueue.set(messageId, resolver)
+        Log.v(this.#tag, 'Registered resolver for messageId with timeout (ms)', messageId, timeoutMs)
+        this.#resolverQueue.set(messageId, resolver)
         setTimeout(() => {
-                const enqueuedResolver = this._resolverQueue.get(messageId)
+                const enqueuedResolver = this.#resolverQueue.get(messageId)
                 if (enqueuedResolver) {
                     enqueuedResolver(undefined)
-                    this._resolverQueue.delete(messageId)
-                    Log.d(this.TAG, 'Resolver for messageId timed out (ms)', messageId, timeoutMs)
+                    this.#resolverQueue.delete(messageId)
+                    Log.d(this.#tag, 'Resolver for messageId timed out (ms)', messageId, timeoutMs)
                 }
             },
             timeoutMs
@@ -221,13 +221,13 @@ export default class WebSocketClient {
      * @param result
      */
     resolvePromise(messageId: string, result: any) {
-        const resolver = this._resolverQueue.get(messageId)
+        const resolver = this.#resolverQueue.get(messageId)
         if (resolver) {
             resolver(result)
-            this._resolverQueue.delete(messageId)
-            Log.v(this.TAG, 'Ran resolver for messageId', messageId)
+            this.#resolverQueue.delete(messageId)
+            Log.v(this.#tag, 'Ran resolver for messageId', messageId)
         } else {
-            Log.w(this.TAG, 'MessageId did not exist in resolver queue, cannot resolve promise', messageId)
+            Log.w(this.#tag, 'MessageId did not exist in resolver queue, cannot resolve promise', messageId)
         }
     }
 
@@ -239,8 +239,8 @@ export default class WebSocketClient {
      * @param timeoutMs
      */
     sendMessageWithPromise<T>(body: string | object | [] | number | boolean | null, messageId: string, timeoutMs: number = 1000): Promise<T | undefined> {
-        if (messageId.length == 0) Log.w(this.TAG, 'Message with promise registered with empty messageId')
-        else Log.v(this.TAG, 'Sent message and registered resolver with messageId and timeout (ms)', messageId, timeoutMs)
+        if (messageId.length == 0) Log.w(this.#tag, 'Message with promise registered with empty messageId')
+        else Log.v(this.#tag, 'Sent message and registered resolver with messageId and timeout (ms)', messageId, timeoutMs)
         return new Promise((resolve) => {
             this.registerResolver(messageId, resolve, timeoutMs)
             this.send(body)
@@ -248,7 +248,7 @@ export default class WebSocketClient {
     }
 
     getNextMessageId(): string {
-        return SerializedId.next(this._options.clientName)
+        return SerializedId.next(this.#options.clientName)
     }
 }
 
