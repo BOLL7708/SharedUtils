@@ -2,6 +2,8 @@ import {IDictionary} from './Dictionary.ts'
 import Log from './Log.ts'
 
 export default class ValueUtils {
+    static #tag = ValueUtils.name
+
     // region Universal
     static isEmpty(value: unknown): boolean {
         if (value === undefined || value === null) return true
@@ -203,7 +205,7 @@ export default class ValueUtils {
         try {
             return JSON.parse(json) as T
         } catch (e) {
-            Log.e(this.name, 'Failed to parse JSON', e)
+            Log.e(this.#tag, 'Failed to parse JSON', e)
             return undefined
         }
     }
@@ -305,6 +307,19 @@ export default class ValueUtils {
         return false
     }
 
+    static hasProperties(obj: unknown, properties: string[]): boolean {
+        if(!this.isObject(obj)) {
+            Log.v(this.#tag, 'hasProperties: obj was not an object')
+            return false
+        }
+        for(const property of properties) {
+            if(!Object.hasOwn(obj, property)) {
+                Log.v(this.#tag, `hasProperties: obj missing: ${property}`)
+                return false
+            }
+        }
+        return true
+    }
     // endregion
 
     // region Generic
