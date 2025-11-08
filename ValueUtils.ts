@@ -222,6 +222,34 @@ export default class ValueUtils {
         return str.toLowerCase().replace(/\s/g, '-')
     }
 
+    static pathWithoutFile(filePath: string): string {
+        let pathArr: string[] = []
+        let file: string|undefined
+        let path: string|undefined
+        if(filePath.includes('/')) {
+            pathArr = filePath.split('/')
+            file = pathArr.pop()
+            if(file && !file.includes('.')) pathArr.push(file)
+            path = pathArr.join('/')
+        } else if(filePath.includes('\\')) {
+            pathArr = filePath.split('\\')
+            file = pathArr.pop()
+            if(file && !file.includes('.')) pathArr.push(file)
+            path = pathArr.join('\\')
+        }
+        return path ?? filePath
+    }
+
+    static fileFromPath(filePath: string): string {
+        let path: string|undefined
+        if(filePath.includes('/')) {
+            path = filePath.split('/').pop()
+        } else if(filePath.includes('\\')) {
+            path = filePath.split('\\').pop()
+        }
+        return path ?? filePath
+    }
+
     /**
      * Removes the first word starting with an upper-case letter in a string.
      * Always trims the incoming string.
