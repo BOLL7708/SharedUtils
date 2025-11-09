@@ -99,13 +99,14 @@ export default class ValueUtils {
                         ? JSON.stringify(b)
                         : `${b}`
                 ) as T | undefined
-            case 'number':
+            case 'number': {
                 const newB = this.ensureNumber(b, Infinity)
                 if (isNaN(newB) || newB === Infinity) {
                     if (Array.isArray(b)) return b.length as T
                     else if (typeof b === 'object' && b !== null) return Object.keys(b).length as T
                     else return undefined
                 } else return newB as T
+            }
             case 'boolean':
                 return this.toBool(b) as T
             case 'object':
@@ -156,7 +157,7 @@ export default class ValueUtils {
      * @param value
      * @param fallback Defaults to 0
      */
-    static ensureNumber(value: any, fallback: number = 0): number {
+    static ensureNumber(value: unknown, fallback: number = 0): number {
         switch (typeof value) {
             case 'number':
                 return isNaN(value) ? fallback : value
@@ -169,6 +170,10 @@ export default class ValueUtils {
             default:
                 return fallback
         }
+    }
+
+    static ensureInt(value: unknown, fallback: number = 0): number {
+        return Math.round(this.ensureNumber(value, fallback))
     }
 
     /**
