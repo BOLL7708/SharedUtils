@@ -1,4 +1,4 @@
-import {IDictionary} from './Dictionary.ts'
+import type {IDictionary} from './Dictionary.ts'
 import Log from './Log.ts'
 
 export default class ValueUtils {
@@ -428,7 +428,7 @@ export default class ValueUtils {
         return bytes
     }
 
-    static async hashPassword(password: string, salt: Uint8Array, urlSafe: boolean = false): Promise<string> {
+    static async hashPassword(password: string, salt: Uint8Array<ArrayBuffer>, urlSafe: boolean = false): Promise<string> {
         const enc = new TextEncoder()
         const keyMaterial = await crypto.subtle.importKey(
             'raw',
@@ -440,7 +440,7 @@ export default class ValueUtils {
         const derivedBits = await crypto.subtle.deriveBits(
             {
                 name: 'PBKDF2',
-                salt: salt,
+                salt,
                 iterations: 100_000,
                 hash: 'SHA-512'
             },
@@ -460,4 +460,29 @@ export default class ValueUtils {
     }
 
     // endregion
+
+    // region Errors
+
+    static #isErrorWithMessage(error: unknown): error is TErrorWithMessage {
+        if(typeof error !== 'object') return false
+        if(error === null) return false
+        if(Array.isArray(error)) return false
+        return 'message' in error
+    }
+
+    static #ensureError(error: unknown): Error {
+        if(this.#isErrorWithMessage(error)) return new Error(error.message)
+        try {
+            return new Error(JSON.stringify(error))
+        } catch {
+            return new Error(String(error))
+        }
+    }
+
+    static getErrorMessage(error: unknown): string {
+        return this.#ensureError(error).message
+    }
+    // endregion
 }
+
+type TErrorWithMessage = {message: string}
